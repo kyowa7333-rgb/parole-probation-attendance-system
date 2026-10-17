@@ -1,0 +1,45 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "location_records",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "paroleeId", "order": "ASCENDING" },
+        { "fieldPath": "recordedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "location_records",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "trackerId", "order": "ASCENDING" },
+        { "fieldPath": "recordedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "activity_attendance",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "activityId", "order": "ASCENDING" },
+        { "fieldPath": "paroleeId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "activity_qr_tokens",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "token", "order": "ASCENDING" },
+        { "fieldPath": "activityId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "attendance",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "officerId", "order": "ASCENDING" },
+        { "fieldPath": "paroleeId", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
