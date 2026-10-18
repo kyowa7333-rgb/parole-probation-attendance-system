@@ -1,4 +1,3 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -12,30 +11,18 @@ import 'package:last/features/activities/providers/activity_provider.dart';
 import 'package:last/features/admin/providers/admin_provider.dart';
 import 'package:last/features/officer/providers/officer_provider.dart';
 import 'package:last/features/auth/providers/auth_provider.dart';
-import 'package:last/firebase_options.dart';
 import 'package:last/features/officer/providers/dashboard_provider.dart';
 import 'package:last/features/parolee/providers/attendance_provider.dart';
 import 'package:last/features/parolee/providers/parolee_provider.dart';
 import 'package:last/features/reports/providers/reports_provider.dart';
-import 'package:last/core/utils/firebase_config.dart';
+import 'package:last/core/utils/supabase_config.dart';
 import 'package:last/features/tracking/providers/phone_location_provider.dart';
 import 'package:last/features/tracking/providers/tracking_provider.dart';
 import 'package:last/routes/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (FirebaseConfig.isConfigured) {
-    try {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-      debugPrint('[Firebase] Initialized: ${DefaultFirebaseOptions.currentPlatform.projectId}');
-    } catch (e, st) {
-      debugPrint('[Firebase] initializeApp failed: $e\n$st');
-    }
-  } else {
-    debugPrint('[Firebase] Not configured — using demo/offline mode');
-  }
+  await SupabaseConfig.initialize();
   await SessionService.init();
   runApp(const ParoleProbationApp());
 }

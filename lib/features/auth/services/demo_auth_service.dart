@@ -1,5 +1,6 @@
 import 'package:last/core/constants/login_credentials.dart';
 import 'package:last/core/services/session_service.dart';
+import 'package:last/core/utils/supabase_config.dart';
 import 'package:last/features/auth/models/app_user.dart';
 import 'package:last/features/auth/models/user_role.dart';
 import 'package:last/features/auth/services/auth_service.dart';
@@ -70,7 +71,15 @@ class DemoAuthService implements AuthService {
     required UserRole role,
     String? phone,
   }) async {
-    throw AuthException('Registration requires Firebase. Configure firebase_options.dart first.');
+    if (SupabaseConfig.isConfigured) {
+      await SupabaseConfig.client.auth.signUp(
+        email: email,
+        password: password,
+        data: {'full_name': fullName, 'role': role.name, 'phone': phone},
+      );
+      return;
+    }
+    throw AuthException('Supabase configuration error.');
   }
 
   @override

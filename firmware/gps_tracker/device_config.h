@@ -1,10 +1,6 @@
 /**
- * GPS Tracker Firmware — PPA-TAC (Spark Firestore REST)
- *
- * TRACKER_ID must match the Firestore gps_trackers document id.
- * DEVICE_EMAIL / DEVICE_PASSWORD are the Firebase Auth user created in the console.
- * FIREBASE_WEB_API_KEY is DefaultFirebaseOptions.web.apiKey in lib/firebase_options.dart.
- * Never commit real device passwords.
+ * GPS Tracker Firmware — PPA-TAC (Supabase REST API)
+ * Configured for direct HTTPS PostgREST calls to Supabase.
  */
 
 #ifndef DEVICE_CONFIG_H
@@ -12,22 +8,22 @@
 
 #define TRACKER_ID "TRK-001"
 #define DEVICE_ID TRACKER_ID
-#define DEVICE_EMAIL "trk-001@pptac-attendance-capstone.web.app"
-#define DEVICE_PASSWORD "your-device-password-here"
 
-#define FIREBASE_WEB_API_KEY "AIzaSyBUfgqd43tnEt0KOl-nztE5KgzV0k_8Sag"
-#define FIREBASE_PROJECT_ID "pptac-attendance-capstone"
+// Supabase Configuration
+#define SUPABASE_URL "https://iqltrfkyzbeepfpmsxci.supabase.co"
+#define SUPABASE_ANON_KEY "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxbHRyZmt5emJlZXBmcG1zeGNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyMTg1OTUsImV4cCI6MjEwNzc5NDU5NX0.aYfh--wAJP1Fua_VrqgXn5kKIaVE-jnK9ZqqVrBTgIU"
 
-// Dev only: skip TLS cert check. Set 0 and load a Google Trust Services CA for production.
+// Skip TLS certificate validation on ESP32 development hardware
 #define USE_INSECURE_TLS 1
 
-// Spark-safe intervals (milliseconds)
-#define INTERVAL_MOVING_MS 60000
-#define INTERVAL_NORMAL_MS 90000
+// Adaptive transmission intervals (milliseconds)
+#define INTERVAL_MOVING_MS 30000
+#define INTERVAL_NORMAL_MS 60000
 #define INTERVAL_STATIONARY_MS 120000
 
 #define MOVING_SPEED_KMH 3.0
 
+// Hardware Pin Configuration
 #define GPS_RX_PIN 16
 #define GPS_TX_PIN 17
 #define GSM_RX_PIN 18

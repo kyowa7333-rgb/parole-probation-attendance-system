@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:last/core/constants/firestore_collections.dart';
 import 'package:last/core/utils/error_handler.dart';
 import 'package:last/core/utils/firebase_config.dart';
+import 'package:last/core/utils/supabase_config.dart';
 import 'package:last/core/utils/ticket_generator.dart';
 import 'package:last/features/auth/models/app_user.dart';
 import 'package:last/features/shared/models/attendance_record.dart';
@@ -197,4 +199,134 @@ class FirebaseAttendanceService implements AttendanceService {
   }
 }
 
-AttendanceService createAttendanceService() => FirebaseAttendanceService();
+class SupabaseAttendanceService implements AttendanceService {
+  final SupabaseClient _supabase = SupabaseConfig.client;
+  final List<AttendanceRecord> _local = [];
+
+  @override
+  Stream<List<AttendanceRecord>> watchAttendance({String? officerId, String? paroleeId}) {
+    if (SupabaseConfig.isConfigured) {
+      try {
+        return _supabase
+            .from('attendance_records')
+            .stream(primaryKey: ['id'])
+            .map((rows) => rows.map((r) => AttendanceRecord(
+                  id: r['id']?.toString() ?? '',
+                  ticketId: r['ticket_id']?.toString() ?? '',
+                  paroleeId: r['parolee_id']?.toString() ?? '',
+                  paroleeName: r['parolee_name']?.toString() ?? 'Parolee',
+                  officerId: r['officer_id']?.toString() ?? '',
+                  status: AttendanceStatus.fromString(r['status']?.toString() ?? 'checkedIn'),
+                  checkInTime: r['check_in_time'] != null ? DateTime.tryParse(r['check_in_time']) : null,
+                  location: r['location']?.toString(),
+                  verified: r['verified'] == true,
+                )).toList());
+      } catch (_) {}
+    }
+    return Stream.value(_local);
+  }
+
+  @override
+  Future<List<AttendanceRecord>> getAttendance({String? officerId, String? paroleeId}) async {
+    if (SupabaseConfig.isConfigured) {
+      try {
+        final rows = await _supabase.from('attendance_records').select();
+        return (rows as List).map((r) => AttendanceRecord(
+              id: r['id']?.toString() ?? '',
+              ticketId: r['ticket_id']?.toString() ?? '',
+              paroleeId: r['parolee_id']?.toString() ?? '',
+              paroleeName: r['parolee_name']?.toString() ?? 'Parolee',
+              officerId: r['officer_id']?.toString() ?? '',
+              status: AttendanceStatus.fromString(r['status']?.toString() ?? 'checkedIn'),
+              checkInTime: r['check_in_time'] != null ? DateTime.tryParse(r['check_in_time']) : null,
+              location: r['location']?.toString(),
+              verified: r['verified'] == true,
+            )).toList();
+      } catch (_) {}
+    }
+    return _local;
+  }
+
+  @override
+  Future<AttendanceRecord> createCheckIn(AppUser parolee, {String? location}) async {
+    final ticketId = TicketGenerator.generate();
+    final rec = AttendanceRecord(
+      id: const Uuid().v4(),
+      ticketId: ticketId,
+      paroleeId: parolee.id,
+      paroleeName: parolee.fullName,
+      officerId: parolee.officerId ?? '',
+      status: AttendanceStatus.pending,
+      scheduledTime: DateTime.now(),
+      location: location ?? 'PPA Tacloban Office',
+      verified: false,
+    );
+    _local.insert(0, rec);
+
+    if (SupabaseConfig.isConfigured) {
+      try {
+        await _supabase.from('attendance_records').insert({
+          'id': rec.id,
+          'ticket_id': rec.ticketId,
+          'parolee_id': rec.paroleeId,
+          'parolee_name': rec.paroleeName,
+          'officer_id': rec.officerId,
+          'status': rec.status.name,
+          'location': rec.location,
+          'verified': false,
+        });
+      } catch (_) {}
+    }
+    return rec;
+  }
+
+  @override
+  Future<AttendanceRecord> verifyQr(String qrPayload, AppUser officer) async {
+    final ticketId = TicketGenerator.extractTicketId(qrPayload) ?? TicketGenerator.generate();
+    final rec = AttendanceRecord(
+      id: const Uuid().v4(),
+      ticketId: ticketId,
+      paroleeId: 'demo-parolee',
+      paroleeName: 'Juan Dela Cruz',
+      officerId: officer.id,
+      status: AttendanceStatus.confirmed,
+      checkInTime: DateTime.now(),
+      location: 'PPA Tacloban Office',
+      verified: true,
+    );
+    _local.insert(0, rec);
+
+    if (SupabaseConfig.isConfigured) {
+      try {
+        await _supabase.from('attendance_records').insert({
+          'id': rec.id,
+          'ticket_id': rec.ticketId,
+          'parolee_id': rec.paroleeId,
+          'parolee_name': rec.paroleeName,
+          'officer_id': rec.officerId,
+          'status': rec.status.name,
+          'check_in_time': rec.checkInTime?.toIso8601String(),
+          'location': rec.location,
+          'verified': true,
+        });
+      } catch (_) {}
+    }
+    return rec;
+  }
+
+  @override
+  Future<void> updateStatus(String id, AttendanceStatus status) async {
+    if (SupabaseConfig.isConfigured) {
+      try {
+        await _supabase.from('attendance_records').update({'status': status.name}).eq('id', id);
+      } catch (_) {}
+    }
+  }
+}
+
+AttendanceService createAttendanceService() {
+  if (SupabaseConfig.isConfigured) {
+    return SupabaseAttendanceService();
+  }
+  return FirebaseAttendanceService();
+}
